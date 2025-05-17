@@ -1,0 +1,19 @@
+extends: spectral:oas
+rules:
+  info-contact: off # No exigir contacto obligatorio
+  operation-summary: error # Cada operación debe tener summary
+  no-eval-in-descriptions:
+    description: No se permite uso de la palabra 'eval' en descripciones
+    severity: error
+    given: "$..description"
+    then:
+      function: pattern
+      functionOptions:
+        notMatch: eval
+  path-params-required:
+    description: Todos los parámetros en el path deben marcarse como 'required'
+    severity: error
+    given: "$..parameters[?(@.in=='path')]"
+    then:
+      field: required
+      function: truthy
