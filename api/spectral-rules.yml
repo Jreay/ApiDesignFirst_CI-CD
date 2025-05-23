@@ -1,7 +1,13 @@
 extends: spectral:oas
 rules:
-  info-contact: off # No exigir contacto obligatorio
-  operation-summary: error # Cada operación debe tener summary
+  info-contact: off
+  operation-summary:
+    description: Cada operación debe tener un resumen (summary)
+    severity: error
+    given: "$.paths[*][*]"
+    then:
+      field: summary
+      function: truthy
   no-eval-in-descriptions:
     description: No se permite uso de la palabra 'eval' en descripciones
     severity: error
