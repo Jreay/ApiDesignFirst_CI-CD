@@ -24,11 +24,11 @@ pipeline {
       steps {
           sh '''
             echo "Verificando disponibilidad del archivo:"
-            ls -la tests/
-            cat tests/test-k6.js
+            ls -la test/
+            cat test/test-k6.js
 
             echo "Ejecutando prueba de carga..."
-            k6 run tests/test-k6.js
+            k6 run test/test-k6.js
           '''
       }
     }
