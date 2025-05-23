@@ -1,10 +1,6 @@
 pipeline {
-  agent {
-    docker {
-      image 'node:18' // Contenedor con Node.js para instalar Spectral y K6
-    }
-  }
-
+  agent any
+  
   environment {
     K6_VERSION = '0.46.0'
   }
