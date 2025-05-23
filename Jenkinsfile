@@ -16,7 +16,7 @@ pipeline {
           npm install -g @stoplight/spectral-cli
           wget https://github.com/grafana/k6/releases/download/v$K6_VERSION/k6-v$K6_VERSION-linux-amd64.tar.gz
           tar -xzf k6-v$K6_VERSION-linux-amd64.tar.gz
-          sudo mv k6-v$K6_VERSION-linux-amd64/k6 /usr/local/bin/
+          mv k6-v$K6_VERSION-linux-amd64/k6 /usr/local/bin/
         '''
       }
     }
