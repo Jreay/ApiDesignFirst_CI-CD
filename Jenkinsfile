@@ -20,26 +20,19 @@ pipeline {
       }
     }
 
-    stage('Instalar y ejecutar prueba de carga con K6') {
-      agent {
-        docker {
-          image 'node:18'
-        }
-      }
+    stage('Ejecutar prueba de carga con K6') {
       steps {
-        sh '''
-          wget https://github.com/grafana/k6/releases/download/v$K6_VERSION/k6-v$K6_VERSION-linux-amd64.tar.gz
-          tar -xzf k6-v$K6_VERSION-linux-amd64.tar.gz
-          mv k6-v$K6_VERSION-linux-amd64/k6 /usr/local/bin/
+          sh '''
+            echo "Verificando disponibilidad del archivo:"
+            ls -la tests/
+            cat tests/test-k6.js
 
-          echo "Verificando archivos disponibles:"
-          ls -R
-
-          echo "Ejecutando prueba de carga con K6..."
-          k6 run tests/test-k6.js
-        '''
+            echo "Ejecutando prueba de carga..."
+            k6 run tests/test-k6.js
+          '''
       }
     }
+
   }
 
   post {
