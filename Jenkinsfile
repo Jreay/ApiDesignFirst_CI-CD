@@ -29,13 +29,29 @@ pipeline {
         }
       }
       steps {
-        sh 'spectral lint api/openapi.yaml -r api/spectral-rules.yml'
+        sh '''
+          npm install -g @stoplight/spectral-cli
+          spectral lint api/openapi.yaml -r api/spectral-rules.yml
+        '''
       }
     }
 
     stage('Ejecutar prueba de carga con K6') {
+      agent {
+        docker {
+          image 'node:18'
+        }
+      }
+      environment {
+        K6_VERSION = '0.46.0'
+      }
       steps {
-        sh 'k6 run tests/test-k6.js'
+        sh '''
+          wget https://github.com/grafana/k6/releases/download/v$K6_VERSION/k6-v$K6_VERSION-linux-amd64.tar.gz
+          tar -xzf k6-v$K6_VERSION-linux-amd64.tar.gz
+          mv k6-v$K6_VERSION-linux-amd64/k6 /usr/local/bin/
+          k6 run tests/test-k6.js
+        '''
       }
     }
   }
