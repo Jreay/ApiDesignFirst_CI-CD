@@ -23,6 +23,11 @@ pipeline {
     }
 
     stage('Validar contrato OpenAPI') {
+      agent {
+        docker {
+          image 'node:18'
+        }
+      }
       steps {
         sh 'spectral lint api/openapi.yaml -r api/spectral-rules.yml'
       }
