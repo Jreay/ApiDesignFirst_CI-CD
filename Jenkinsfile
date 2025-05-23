@@ -1,12 +1,17 @@
 pipeline {
   agent any
-  
+
   environment {
     K6_VERSION = '0.46.0'
   }
 
   stages {
     stage('Instalar herramientas') {
+      agent {
+        docker {
+          image 'node:18'
+        }
+      }
       steps {
         sh '''
           npm install -g @stoplight/spectral-cli
