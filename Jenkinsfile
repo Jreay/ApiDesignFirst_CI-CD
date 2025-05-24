@@ -8,6 +8,13 @@ pipeline {
   }
 
   stages {
+    stage('Checkout SCM') {
+      agent any
+      steps {
+        checkout scm  // ← Esto clona tu repositorio Git en $WORKSPACE
+      }
+    }
+
     stage('Validar contrato OpenAPI con Spectral') {
       agent {
         docker {
