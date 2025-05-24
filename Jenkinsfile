@@ -1,5 +1,5 @@
 pipeline {
-  agent none // Cada etapa definirá su propio agente
+  agent any
 
   environment {
     K6_VERSION = '0.46.0'
