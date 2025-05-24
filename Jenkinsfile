@@ -23,6 +23,11 @@ pipeline {
     stage('Ejecutar prueba de carga con K6') {
       steps {
           sh '''
+            echo "Instalando K6..."
+            wget https://github.com/grafana/k6/releases/download/v0.46.0/k6-v0.46.0-linux-amd64.tar.gz
+            tar -xzf k6-v0.46.0-linux-amd64.tar.gz
+            mv k6-v0.46.0-linux-amd64/k6 /usr/local/bin/
+            
             echo "Verificando disponibilidad del archivo:"
             ls -la test/
             cat test/test-k6.js
