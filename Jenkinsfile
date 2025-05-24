@@ -12,6 +12,11 @@ pipeline {
       agent any
       steps {
         checkout scm  // ← Esto clona tu repositorio Git en $WORKSPACE
+        sh '''
+          echo "=== Estructura del Workspace ==="
+          ls -la $WORKSPACE/api/
+          echo "==============================="
+        '''
       }
     }
 
@@ -20,6 +25,7 @@ pipeline {
         docker {
           image 'node:18'
           args '-v $WORKSPACE:/workspace' // Monta el workspace completo
+          reuseNode true
         }
       }
       steps {
@@ -35,6 +41,7 @@ pipeline {
         docker {
           image 'openapitools/openapi-generator-cli'
           args '-v $WORKSPACE/generated-api:/output' // Directorio de salida
+          reuseNode true
         }
       }
       steps {
@@ -52,6 +59,7 @@ pipeline {
         docker {
           image 'node:18-alpine'
           args '--network host -v $WORKSPACE/generated-api:/app'
+          reuseNode true
         }
       }
       steps {
@@ -69,6 +77,7 @@ pipeline {
         docker {
           image "grafana/k6:${K6_VERSION}"
           args '--network host -v $WORKSPACE:/workspace'
+          reuseNode true
         }
       }
       steps {
