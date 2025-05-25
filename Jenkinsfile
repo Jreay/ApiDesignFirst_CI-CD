@@ -34,16 +34,19 @@ pipeline {
     stage('Generar código a partir de OpenAPI') {
       agent {
         docker {
-          image 'openapitools/openapi-generator-cli'
-          args '-v $WORKSPACE:/local' 
+          image 'openjdk:11'  // Requiere Java
         }
       }
       steps {
         sh '''
-          openapi-generator-cli generate \
+          # Descarga e instala el generador
+          wget https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/6.0.1/openapi-generator-cli-6.0.1.jar -O openapi-generator-cli.jar
+          
+          # Ejecuta el generador
+          java -jar openapi-generator-cli.jar generate \
             -i api/openapi.yaml \
             -g typescript-express-server \
-            -o generated-api/
+            -o generated-api
         '''
       }
     }
