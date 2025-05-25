@@ -40,16 +40,13 @@ pipeline {
       }
       steps {
         sh '''
-          # Verifica que el archivo existe
           ls -la /local/api/openapi.yaml
           
-          # Ejecuta el generador
           java -jar /opt/openapi-generator-cli.jar generate \
             -i /local/api/openapi.yaml \
             -g nodejs-express-server \  # Generador correcto para Express
             -o /local/generated-api
           
-          echo "=== Resultado generado ==="
           ls -la /local/generated-api
         '''
       }
