@@ -44,7 +44,7 @@ pipeline {
           
           java -jar /opt/openapi-generator-cli.jar generate \
             -i /local/api/openapi.yaml \
-            -g nodejs-express-server \  # Generador correcto para Express
+            -g nodejs-express-server \
             -o /local/generated-api
           
           ls -la /local/generated-api
