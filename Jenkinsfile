@@ -9,13 +9,12 @@ pipeline {
 
   stages {
     stage('Checkout SCM') {
-      agent any
       steps {
-        checkout scm  // ← Esto clona tu repositorio Git en $WORKSPACE
+        checkout scm
         sh '''
-          echo "=== Estructura del Workspace ==="
-          ls -la $WORKSPACE/api/
-          echo "==============================="
+          echo "=== Estructura del Directorio ==="
+          ls -la api/
+          echo "================================"
         '''
       }
     }
@@ -23,16 +22,11 @@ pipeline {
     stage('Validar contrato OpenAPI con Spectral') {
       agent {
         docker {
-          image 'node:18'
-          args '-v $WORKSPACE:/workspace' // Monta el workspace completo
-          reuseNode true
+          image 'stoplight/spectral:6.4.0'  // Imagen con Spectral preinstalado
         }
       }
       steps {
-        sh '''
-          npm install -g @stoplight/spectral-cli
-          spectral lint /workspace/api/openapi.yaml -r /workspace/api/spectral-rules.yml
-        '''
+        sh 'spectral lint api/openapi.yaml -r api/spectral-rules.yml'
       }
     }
 
@@ -40,16 +34,14 @@ pipeline {
       agent {
         docker {
           image 'openapitools/openapi-generator-cli'
-          args '-v $WORKSPACE/generated-api:/output' // Directorio de salida
-          reuseNode true
         }
       }
       steps {
         sh '''
           openapi-generator-cli generate \
-            -i /workspace/api/openapi.yaml \
+            -i api/openapi.yaml \
             -g typescript-express-server \
-            -o /output
+            -o generated-api/
         '''
       }
     }
@@ -58,13 +50,12 @@ pipeline {
       agent {
         docker {
           image 'node:18-alpine'
-          args '--network host -v $WORKSPACE/generated-api:/app'
-          reuseNode true
+          args '--network host'
         }
       }
       steps {
         sh '''
-          cd /app
+          cd generated-api
           npm install
           nohup npm start &  // Ejecuta en background
           sleep 10  // Espera que la API esté lista
@@ -76,49 +67,41 @@ pipeline {
       agent {
         docker {
           image "grafana/k6:${K6_VERSION}"
-          args '--network host -v $WORKSPACE:/workspace'
-          reuseNode true
+          args '--network host'
         }
       }
       steps {
-        sh '''
-          echo "Ejecutando prueba de carga..."
-          k6 run /workspace/test/test-k6.js
-        '''
+        sh 'k6 run test/test-k6.js'
       }
     }
 
     stage('Generar informes') {
-      agent any // Puede ejecutarse en cualquier agente
       steps {
         sh '''
-          mkdir -p $WORKSPACE/reports
-          spectral lint /workspace/api/openapi.yaml -r /workspace/api/spectral-rules.yml > $WORKSPACE/reports/spectral-report.txt
-          k6 run --out json=$WORKSPACE/reports/k6-report.json /workspace/test/test-k6.js
+          mkdir -p reports
+          spectral lint api/openapi.yaml -r api/spectral-rules.yml > reports/spectral-report.txt
+          k6 run --out json=reports/k6-report.json test/test-k6.js
         '''
         archiveArtifacts artifacts: 'reports/**', fingerprint: true
       }
     }
 
     stage('Desplegar en Repo Destino') {
-      agent any
       steps {
         script {
           try {
-            // Clonar y copiar archivos
-            sh 'git clone $GIT_REPO $WORKSPACE/repo-destino || true'
-            sh 'cp -rn $WORKSPACE/generated-api/* $WORKSPACE/repo-destino/'
+            sh 'git clone $GIT_REPO repo-destino || true'
+            sh 'cp -rn generated-api/* repo-destino/'
             
-            // Verificar cambios
             def changes = sh(
-              script: 'cd $WORKSPACE/repo-destino && git status --porcelain', 
+              script: 'cd repo-destino && git status --porcelain', 
               returnStdout: true
             ).trim()
             
             if (changes) {
               echo "🔄 Cambios detectados: ${changes}"
               sh '''
-                cd $WORKSPACE/repo-destino
+                cd repo-destino
                 git config user.email "ci@jenkins"
                 git config user.name "Jenkins CI"
                 git add .
@@ -140,8 +123,7 @@ pipeline {
   post {
     always {
       echo 'Pipeline terminado. Verifica resultados de validación y carga.'
-      // Limpieza opcional
-      sh 'rm -rf $WORKSPACE/repo-destino || true'
+      sh 'rm -rf repo-destino || true'
     }
     failure {
       slackSend channel: '#notifications',
