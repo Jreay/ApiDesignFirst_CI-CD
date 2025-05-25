@@ -34,7 +34,7 @@ pipeline {
     stage('Generar código API') {
       agent {
         docker {
-          image 'openapitools/openapi-generator-cli:6.6.0'  // Versión específica
+          image 'openapitools/openapi-generator-cli:latest'  // Versión específica
           args '--entrypoint="" -v $WORKSPACE:/local'  // Key changes here
         }
       }
