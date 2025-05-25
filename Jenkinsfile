@@ -35,6 +35,7 @@ pipeline {
       agent {
         docker {
           image 'openapitools/openapi-generator-cli'
+          args '-v $WORKSPACE:/local' 
         }
       }
       steps {
