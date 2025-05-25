@@ -22,7 +22,8 @@ pipeline {
     stage('Validar contrato OpenAPI con Spectral') {
       agent {
         docker {
-          image 'stoplight/spectral:6.4.0'  // Imagen con Spectral preinstalado
+          image 'stoplight/spectral:6.4.0'
+          args '--entrypoint=""' 
         }
       }
       steps {
