@@ -97,7 +97,7 @@ pipeline {
       steps {
         sh '''
           mkdir -p ${REPORT_DIR}
-          mv resultado.json ${REPORT_DIR}/reporte_${TIMESTAMP}.json
+          mv tests/resultado.json ${REPORT_DIR}/reporte_${TIMESTAMP}.json
         '''
 
         withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
