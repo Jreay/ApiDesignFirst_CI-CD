@@ -10,15 +10,6 @@ pipeline {
 
   stages {
 
-    stage('Instalar dependencias') {
-      agent {
-        docker { image 'node:18-alpine' }
-      }
-      steps {
-        sh 'npm install'
-      }
-    }
-
     stage('Validar contrato OpenAPI original con Spectral') {
       agent {
         docker {
