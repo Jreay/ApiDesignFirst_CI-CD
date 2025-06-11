@@ -61,7 +61,7 @@ pipeline {
         }
       }
       steps {
-        sh 'spectral lint openapi.generated.yaml'
+        sh 'spectral lint openapi.generated.yaml -r validation/rules.yml'
       }
     }
 
