@@ -89,28 +89,33 @@ pipeline {
           mv k6-v0.46.0-linux-amd64/k6 /usr/local/bin/k6
           k6 run tests/test-k6.js --out json=resultado.json
         '''
-        
-        sh 'test -f resultado.json && echo "✅ resultado.json existe" || echo "❌ resultado.json no fue generado"'
 
-        stash includes: 'resultado.json', name: 'k6-report'
+        stash includes: 'resultado.json', name: 'k6-json'
       }
     }
-    
-    stage('Generar reporte HTML') {
+
+    stage('Generar reporte HTML y PDF') {
       agent {
         docker {
           image 'node:18-alpine'
-          args '--network host'
         }
       }
       steps {
         unstash 'k6-json'
         sh '''
-          apk add --no-cache nodejs npm
+          echo "📦 Instalando dependencias"
+          apk add --no-cache nodejs npm wkhtmltopdf
+
+          echo "🔧 Instalando k6-reporter"
           npm install -g k6-reporter
+
+          echo "📄 Generando HTML"
           k6-reporter resultado.json > reporte.html
+
+          echo "🧾 Generando PDF"
+          wkhtmltopdf reporte.html reporte.pdf
         '''
-        stash includes: 'reporte.html,resultado.json', name: 'k6-report'
+        stash includes: 'reporte.pdf', name: 'k6-report'
       }
     }
 
@@ -120,8 +125,7 @@ pipeline {
         unstash 'k6-report'
         sh '''
           mkdir -p ${REPORT_DIR}
-          mv resultado.json ${REPORT_DIR}/reporte_${TIMESTAMP}.json
-          mv reporte.html ${REPORT_DIR}/reporte_${TIMESTAMP}.html
+          mv reporte.pdf ${REPORT_DIR}/reporte_${TIMESTAMP}.pdf
         '''
 
         withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
