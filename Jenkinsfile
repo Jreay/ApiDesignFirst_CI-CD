@@ -106,9 +106,12 @@ pipeline {
           sh '''
             git config user.name "jenkins-bot"
             git config user.email "jenkins@localhost"
-            git add ${REPORT_DIR}
+
+            git remote set-url origin https://${GIT_USER}:${GIT_PASS}@github.com/Jreay/ApiDesignFirst_CI-CD.git
+
+            git add reports || true
             git commit -m "📊 Reporte generado automáticamente: ${TIMESTAMP}" || true
-            git push https://${GIT_USER}:${GIT_PASS}@github.com/Jreay/ApiDesignFirst_CI-CD.git HEAD:main
+            git push origin HEAD:main
           '''
         }
       }
