@@ -160,7 +160,7 @@ pipeline {
           npm install puppeteer
 
           echo "📄 Generando PDF con Puppeteer"
-          cat > generar-pdf.js <<'EOF'
+          cat > generar-pdf.js <<EOF
           const puppeteer = require('puppeteer');
           (async () => {
             const browser = await puppeteer.launch({
