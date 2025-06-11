@@ -89,6 +89,9 @@ pipeline {
           mv k6-v0.46.0-linux-amd64/k6 /usr/local/bin/k6
           k6 run tests/test-k6.js --out json=resultado.json
         '''
+        
+        sh 'test -f resultado.json && echo "✅ resultado.json existe" || echo "❌ resultado.json no fue generado"'
+
         stash includes: 'resultado.json', name: 'k6-report'
       }
     }
@@ -97,6 +100,7 @@ pipeline {
       agent {
         docker {
           image 'node:18-alpine'
+          args '--network host'
         }
       }
       steps {
