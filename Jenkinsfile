@@ -87,9 +87,13 @@ pipeline {
           curl -s https://github.com/grafana/k6/releases/download/v0.46.0/k6-v0.46.0-linux-amd64.tar.gz -L -o k6.tar.gz
           tar -xzf k6.tar.gz
           mv k6-v0.46.0-linux-amd64/k6 /usr/local/bin/k6
+
+          npm install -g k6-reporter
+
           k6 run tests/test-k6.js --out json=resultado.json
+          k6-reporter resultado.json > reporte.html
         '''
-        stash includes: 'resultado.json', name: 'k6-report'
+        stash includes: 'resultado.json,reporte.html', name: 'k6-report'
       }
     }
 
@@ -100,6 +104,7 @@ pipeline {
         sh '''
           mkdir -p ${REPORT_DIR}
           mv resultado.json ${REPORT_DIR}/reporte_${TIMESTAMP}.json
+          mv reporte.html ${REPORT_DIR}/reporte_${TIMESTAMP}.html
         '''
 
         withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
