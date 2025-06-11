@@ -1,0 +1,11 @@
+{
+  "name": "api-ci",
+  "version": "1.0.0",
+  "scripts": {
+    "generate": "node generateContract.js"
+  },
+  "dependencies": {
+    "swagger-jsdoc": "^6.2.8",
+    "js-yaml": "^4.1.0"
+  }
+}

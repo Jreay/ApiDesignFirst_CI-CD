@@ -10,6 +10,18 @@ pipeline {
 
   stages {
 
+    stage('Clonar repositorio OpenAPI') {
+      steps {
+        sh 'git clone https://github.com/Jreay/OpenAPI.git openapi-code'
+      }
+    }
+
+    stage('Instalar dependencias') {
+      steps {
+        sh 'npm install'
+      }
+    }
+
     stage('Validar contrato OpenAPI original con Spectral') {
       agent {
         docker {
@@ -29,7 +41,7 @@ pipeline {
         }
       }
       steps {
-        sh 'node generateContract.js > openapi.generated.yaml'
+        sh 'node generateContract.js'
       }
     }
 
@@ -49,7 +61,7 @@ pipeline {
       steps {
         sh '''
           echo "Diferencias entre contratos original y generado:" || true
-          diff openapi.yaml openapi.generated.yaml || true
+          diff contracts/openapi.yaml openapi.generated.yaml || true
         '''
       }
     }
