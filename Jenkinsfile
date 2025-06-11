@@ -12,7 +12,10 @@ pipeline {
 
     stage('Clonar repositorio OpenAPI') {
       steps {
-        sh 'git clone https://github.com/Jreay/OpenAPI.git openapi-code'
+        sh '''
+          rm -rf openapi-code
+          git clone https://github.com/Jreay/OpenAPI.git openapi-code
+        '''
       }
     }
 
