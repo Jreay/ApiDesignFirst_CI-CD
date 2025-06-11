@@ -82,7 +82,14 @@ pipeline {
         }
       }
       steps {
-        sh 'k6 run tests/test-k6.js --quiet --out json=resultado.json'
+        sh '''
+            echo "📝 Contenido de tests/"
+            ls -la tests/
+            echo "📝 Primeras líneas del script:"
+            head -n 15 tests/test-k6.js
+            echo "🚀 Ejecutando prueba de carga"
+            k6 run tests/test-k6.js --out json=resultado.json
+          '''
       }
     }
 
