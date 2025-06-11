@@ -16,34 +16,67 @@ export const options = {
   },
 };
 
-export default function () {
-  // Cambio principal: Usar 'localhost' en lugar de 'api' 
-  const url = 'http://localhost:3000/api/usuarios';  // ← Cambiado!
-  const params = {
-    timeout: '10s',
-    tags: {
-      endpoint: 'get_usuarios',
-    },
-  };
+const BASE_URL = 'https://openapi-09h0.onrender.com/api/movimientos';
 
-  try {
-    const res = http.get(url, params);
-    
+const endpoints = [
+  {
+    name: 'ahorro',
+    url: `${BASE_URL}/ahorro`,
+    headers: { 'X-Numero-Cuenta': 'AHO-123456' },
+  },
+  {
+    name: 'corriente',
+    url: `${BASE_URL}/corriente`,
+    headers: { 'X-Numero-Cuenta': 'COR-654321' },
+  },
+  {
+    name: 'tarjetas',
+    url: `${BASE_URL}/tarjetas`,
+    headers: { 'X-Numero-Tarjeta': 'TARJ-4567890123' },
+  },
+  {
+    name: 'ahorro_detalle',
+    url: `${BASE_URL}/ahorro/detalle`,
+    headers: {
+      'X-Numero-Cuenta': 'AHO-123456',
+      'X-Movimiento-Id': 'mov-123',
+    },
+  },
+  {
+    name: 'corriente_detalle',
+    url: `${BASE_URL}/corriente/detalle`,
+    headers: {
+      'X-Numero-Cuenta': 'COR-654321',
+      'X-Movimiento-Id': 'mov-456',
+    },
+  },
+  {
+    name: 'tarjetas_detalle',
+    url: `${BASE_URL}/tarjetas/detalle`,
+    headers: {
+      'X-Numero-Tarjeta': 'TARJ-4567890123',
+      'X-Movimiento-Id': 'mov-789',
+    },
+  },
+];
+
+export default function () {
+  for (const endpoint of endpoints) {
+    const res = http.get(endpoint.url, { headers: endpoint.headers, timeout: '10s' });
     responseTimeTrend.add(res.timings.duration);
-    
+
     check(res, {
-      'status es 200': (r) => r.status === 200,
-      'respuesta contiene usuarios': (r) => {
+      [`[${endpoint.name}] status es 200`]: (r) => r.status === 200,
+      [`[${endpoint.name}] respuesta no vacía`]: (r) => {
         try {
-          return JSON.parse(r.body).some(u => u.nombre);
+          const body = JSON.parse(r.body);
+          return body && (Array.isArray(body) ? body.length > 0 : body.id);
         } catch (e) {
           return false;
         }
       },
     });
-  } catch (e) {
-    console.error(`Error en request: ${e.message}`);
-  }
 
-  sleep(1);
+    sleep(1);
+  }
 }
