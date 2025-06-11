@@ -82,7 +82,7 @@ pipeline {
         }
       }
       steps {
-        sh 'k6 run tests/test-k6.js --out json=resultado.json'
+        sh 'k6 run tests/test-k6.js --quiet --out json=resultado.json'
       }
     }
 
