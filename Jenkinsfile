@@ -75,21 +75,8 @@ pipeline {
     }
 
     stage('Ejecutar prueba de carga con K6') {
-      agent {
-        docker {
-          image "grafana/k6:${K6_VERSION}"
-          args '--network host'
-        }
-      }
       steps {
-        sh '''
-            echo "📝 Contenido de tests/"
-            ls -la tests/
-            echo "📝 Primeras líneas del script:"
-            head -n 15 tests/test-k6.js
-            echo "🚀 Ejecutando prueba de carga"
-            k6 run tests/test-k6.js --out json=resultado.json
-          '''
+        sh 'k6 run tests/test-k6.js'
       }
     }
 
