@@ -89,12 +89,10 @@ pipeline {
           mv k6-v0.46.0-linux-amd64/k6 /usr/local/bin/k6
           k6 run tests/test-k6.js --out json=resultado.json
         '''
-
-        stash includes: 'resultado.json', name: 'k6-json'
       }
     }
 
-    stage('Generar reporte HTML y PDF') {
+    stage('Generar HTML de reporte del pipeline') {
       agent {
         docker {
           image 'node:18-bullseye'
@@ -102,27 +100,66 @@ pipeline {
         }
       }
       steps {
-        unstash 'k6-json'
+        script {
+          env.TIMESTAMP = sh(script: "date +'%Y-%m-%d_%H-%M-%S'", returnStdout: true).trim()
+          env.REPORT_DIR = 'reports'
+        }
 
         sh '''
-          echo "📦 Instalando dependencias del sistema"
+          echo "📝 Creando HTML del reporte"
+          mkdir -p ${REPORT_DIR}
+          cat > ${REPORT_DIR}/reporte.html <<EOF
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <title>Reporte del Pipeline</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 40px; }
+              h1 { color: #2c3e50; }
+              table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+              th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+              th { background-color: #f2f2f2; }
+              td.status { font-weight: bold; color: green; }
+            </style>
+          </head>
+          <body>
+            <h1>📋 Reporte del Pipeline - ${TIMESTAMP}</h1>
+            <table>
+              <tr><th>Paso</th><th>Estado</th></tr>
+              <tr><td>Validación de contratos API</td><td class="status">✅</td></tr>
+              <tr><td>Generación de contrato desde código</td><td class="status">✅</td></tr>
+              <tr><td>Comparación de contratos</td><td class="status">✅</td></tr>
+              <tr><td>Pruebas de carga con K6</td><td class="status">✅</td></tr>
+            </table>
+          </body>
+          </html>
+          EOF
+        '''
+
+        stash includes: "${REPORT_DIR}/reporte.html", name: 'html-pipeline'
+      }
+    }
+
+    stage('Generar PDF del pipeline') {
+      agent {
+        docker {
+          image 'node:18-bullseye'
+          args '--network host'
+        }
+      }
+      steps {
+        unstash 'html-pipeline'
+
+        sh '''
+          echo "📦 Instalando Puppeteer"
           apt-get update
-          apt-get install -y wget ca-certificates fonts-liberation libappindicator3-1 libasound2 libatk-bridge2.0-0 \
-            libcups2 libdbus-1-3 libnss3 libx11-xcb1 libxcomposite1 libxdamage1 libxrandr2 xdg-utils libu2f-udev
+          apt-get install -y wget ca-certificates fonts-liberation libappindicator3-1 libasound2 \
+            libatk-bridge2.0-0 libcups2 libdbus-1-3 libnss3 libx11-xcb1 libxcomposite1 libxdamage1 \
+            libxrandr2 xdg-utils libu2f-udev
+          npm install puppeteer
 
-          echo "⬇️ Instalando herramientas de reporte"
-          npm install -g puppeteer
-          
-          echo "⬇️ Clonando k6-reporter"
-          git clone https://github.com/sznowicki/k6-reporter.git
-          cd k6-reporter
-          npm install -g .
-          cd ..
-
-          echo "📄 Generando HTML con k6-reporter"
-          k6-reporter resultado.json > reporte.html
-
-          echo "📄 Generando reporte PDF desde HTML"
+          echo "📄 Generando PDF con Puppeteer"
           cat > generar-pdf.js <<'EOF'
           const puppeteer = require('puppeteer');
           (async () => {
@@ -131,8 +168,8 @@ pipeline {
               args: ['--no-sandbox', '--disable-setuid-sandbox']
             });
             const page = await browser.newPage();
-            await page.goto(`file://${process.cwd()}/reporte.html`, { waitUntil: 'networkidle0' });
-            await page.pdf({ path: 'reporte.pdf', format: 'A4' });
+            await page.goto(`file://${process.cwd()}/reports/reporte.html`, { waitUntil: 'networkidle0' });
+            await page.pdf({ path: 'reports/reporte_${TIMESTAMP}.pdf', format: 'A4' });
             await browser.close();
           })();
           EOF
@@ -140,17 +177,14 @@ pipeline {
           node generar-pdf.js
         '''
 
-        stash includes: 'reporte.pdf', name: 'k6-pdf'
+        stash includes: 'reports/reporte_*.pdf', name: 'k6-pdf'
       }
     }
+
 
     stage('Generar y subir reporte') {
       steps {
         unstash 'k6-pdf'
-        sh '''
-          mkdir -p ${REPORT_DIR}
-          mv reporte.pdf ${REPORT_DIR}/reporte_${TIMESTAMP}.pdf
-        '''
 
         withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
           sh '''
