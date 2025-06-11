@@ -111,7 +111,8 @@ pipeline {
             libcups2 libdbus-1-3 libnss3 libx11-xcb1 libxcomposite1 libxdamage1 libxrandr2 xdg-utils libu2f-udev
 
           echo "⬇️ Instalando herramientas de reporte"
-          npm install -g k6-reporter puppeteer
+          npm install -g puppeteer
+          npm install -g https://github.com/sznowicki/k6-reporter
 
           echo "📄 Generando HTML con k6-reporter"
           k6-reporter resultado.json > reporte.html
