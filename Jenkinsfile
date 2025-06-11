@@ -112,7 +112,12 @@ pipeline {
 
           echo "⬇️ Instalando herramientas de reporte"
           npm install -g puppeteer
-          npm install -g https://github.com/sznowicki/k6-reporter
+          
+          echo "⬇️ Clonando k6-reporter"
+          git clone https://github.com/sznowicki/k6-reporter.git
+          cd k6-reporter
+          npm install -g .
+          cd ..
 
           echo "📄 Generando HTML con k6-reporter"
           k6-reporter resultado.json > reporte.html
