@@ -97,32 +97,47 @@ pipeline {
     stage('Generar reporte HTML y PDF') {
       agent {
         docker {
-          image 'node:18-alpine'
+          image 'node:18-bullseye'
+          args '--network host'
         }
       }
       steps {
         unstash 'k6-json'
+
         sh '''
-          echo "📦 Instalando dependencias"
-          apk add --no-cache nodejs npm wkhtmltopdf
+          echo "📦 Instalando dependencias del sistema"
+          apt-get update
+          apt-get install -y wget ca-certificates fonts-liberation libappindicator3-1 libasound2 libatk-bridge2.0-0 \
+            libcups2 libdbus-1-3 libnss3 libx11-xcb1 libxcomposite1 libxdamage1 libxrandr2 xdg-utils libu2f-udev
 
-          echo "🔧 Instalando k6-reporter"
-          npm install -g k6-reporter
+          echo "⬇️ Instalando Puppeteer"
+          npm install puppeteer
 
-          echo "📄 Generando HTML"
-          k6-reporter resultado.json > reporte.html
+          echo "📄 Generando reporte PDF desde HTML"
+          cat > generar-pdf.js <<'EOF'
+          const puppeteer = require('puppeteer');
+          (async () => {
+            const browser = await puppeteer.launch({
+              headless: true,
+              args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
+            const page = await browser.newPage();
+            await page.goto(`file://${process.cwd()}/reporte.html`, { waitUntil: 'networkidle0' });
+            await page.pdf({ path: 'reporte.pdf', format: 'A4' });
+            await browser.close();
+          })();
+          EOF
 
-          echo "🧾 Generando PDF"
-          wkhtmltopdf reporte.html reporte.pdf
+          node generar-pdf.js
         '''
-        stash includes: 'reporte.pdf', name: 'k6-report'
+
+        stash includes: 'reporte.pdf', name: 'k6-pdf'
       }
     }
 
-
     stage('Generar y subir reporte') {
       steps {
-        unstash 'k6-report'
+        unstash 'k6-pdf'
         sh '''
           mkdir -p ${REPORT_DIR}
           mv reporte.pdf ${REPORT_DIR}/reporte_${TIMESTAMP}.pdf
