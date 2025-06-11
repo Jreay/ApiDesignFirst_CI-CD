@@ -3,68 +3,62 @@ pipeline {
 
   environment {
     K6_VERSION = '0.46.0'
-    GIT_REPO = 'https://github.com/Jreay/OpenAPI.git'
     GIT_BRANCH = 'main'
+    REPORT_DIR = 'reports'
+    TIMESTAMP = "${new Date().format('yyyyMMdd_HHmm')}"
   }
 
   stages {
-    stage('Checkout SCM') {
+
+    stage('Instalar dependencias') {
+      agent {
+        docker { image 'node:18-alpine' }
+      }
       steps {
-        checkout scm
-        sh '''
-          echo "=== Estructura del Directorio ==="
-          ls -la api/
-          echo "================================"
-        '''
+        sh 'npm install'
       }
     }
 
-    stage('Validar contrato OpenAPI con Spectral') {
+    stage('Validar contrato OpenAPI original con Spectral') {
       agent {
         docker {
           image 'stoplight/spectral:6.4.0'
-          args '--entrypoint=""' 
+          args '--entrypoint=""'
         }
       }
       steps {
-        sh 'spectral lint api/openapi.yaml -r api/spectral-rules.yml'
+        sh 'spectral lint contracts/openapi.yaml -r validation/rules.yml'
       }
     }
 
-    stage('Generar código API') {
-      agent {
-        docker {
-          image 'openapitools/openapi-generator-cli:latest'  // Versión específica
-          args '--entrypoint="" -v $WORKSPACE:/local'  // Key changes here
-        }
-      }
-      steps {
-        sh '''
-          ls -la /local/api/openapi.yaml
-          
-          java -jar /opt/openapi-generator-cli.jar generate \
-            -i /local/api/openapi.yaml \
-            -g nodejs-express-server \
-            -o /local/generated-api
-          
-          ls -la /local/generated-api
-        '''
-      }
-    }
-
-    stage('Construir y Ejecutar API') {
+    stage('Generar contrato desde código fuente') {
       agent {
         docker {
           image 'node:18-alpine'
-          args '--network host'
         }
       }
       steps {
+        sh 'node generateContract.js > openapi.generated.yaml'
+      }
+    }
+
+    stage('Validar contrato generado con Spectral') {
+      agent {
+        docker {
+          image 'stoplight/spectral:6.4.0'
+          args '--entrypoint=""'
+        }
+      }
+      steps {
+        sh 'spectral lint openapi.generated.yaml'
+      }
+    }
+
+    stage('Comparar contratos OpenAPI') {
+      steps {
         sh '''
-          cd generated-api
-          npm install
-          nohup npm start &  // Ejecuta en background
-          sleep 10  // Espera que la API esté lista
+          echo "Diferencias entre contratos original y generado:" || true
+          diff openapi.yaml openapi.generated.yaml || true
         '''
       }
     }
@@ -77,50 +71,25 @@ pipeline {
         }
       }
       steps {
-        sh 'k6 run test/test-k6.js'
+        sh 'k6 run test/test-k6.js --out json=resultado.json'
       }
     }
 
-    stage('Generar informes') {
+    stage('Generar y subir reporte') {
       steps {
         sh '''
-          mkdir -p reports
-          spectral lint api/openapi.yaml -r api/spectral-rules.yml > reports/spectral-report.txt
-          k6 run --out json=reports/k6-report.json test/test-k6.js
+          mkdir -p ${REPORT_DIR}
+          mv resultado.json ${REPORT_DIR}/reporte_${TIMESTAMP}.json
         '''
-        archiveArtifacts artifacts: 'reports/**', fingerprint: true
-      }
-    }
 
-    stage('Desplegar en Repo Destino') {
-      steps {
-        script {
-          try {
-            sh 'git clone $GIT_REPO repo-destino || true'
-            sh 'cp -rn generated-api/* repo-destino/'
-            
-            def changes = sh(
-              script: 'cd repo-destino && git status --porcelain', 
-              returnStdout: true
-            ).trim()
-            
-            if (changes) {
-              echo "🔄 Cambios detectados: ${changes}"
-              sh '''
-                cd repo-destino
-                git config user.email "ci@jenkins"
-                git config user.name "Jenkins CI"
-                git add .
-                git commit -m "Auto-update: ${BUILD_ID} [skip ci]"
-                git push origin $GIT_BRANCH
-              '''
-            } else {
-              echo "🟢 No hay cambios - Pipeline continúa"
-            }
-          } catch (err) {
-            echo "🔴 Error en despliegue: ${err.message}"
-            currentBuild.result = 'UNSTABLE'
-          }
+        withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+          sh '''
+            git config user.name "jenkins-bot"
+            git config user.email "jenkins@localhost"
+            git add ${REPORT_DIR}
+            git commit -m "📊 Reporte generado automáticamente: ${TIMESTAMP}" || true
+            git push https://${GIT_USER}:${GIT_PASS}@github.com/Jreay/ApiDesignFirst_CI-CD.git HEAD:main
+          '''
         }
       }
     }
@@ -128,12 +97,10 @@ pipeline {
 
   post {
     always {
-      echo 'Pipeline terminado. Verifica resultados de validación y carga.'
-      sh 'rm -rf repo-destino || true'
+      echo '✅ Pipeline finalizado. Revisa validaciones y pruebas de carga.'
     }
     failure {
-      slackSend channel: '#notifications',
-                message: "Pipeline fallido: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+      echo '🔴 Error detectado en el pipeline.'
     }
   }
 }
