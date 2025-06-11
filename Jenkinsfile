@@ -148,8 +148,28 @@ pipeline {
           args '--network host'
         }
       }
+      environment {
+        REPORT_NAME = "reporte_${env.TIMESTAMP}.pdf"
+      }
       steps {
         unstash 'html-pipeline'
+
+        script {
+          def jsScript = """
+            const puppeteer = require('puppeteer');
+            (async () => {
+              const browser = await puppeteer.launch({
+                headless: true,
+                args: ['--no-sandbox', '--disable-setuid-sandbox']
+              });
+              const page = await browser.newPage();
+              await page.goto('file://${env.WORKSPACE}/reports/reporte.html', { waitUntil: 'networkidle0' });
+              await page.pdf({ path: 'reports/reporte_${env.TIMESTAMP}.pdf', format: 'A4' });
+              await browser.close();
+            })();
+          """
+          writeFile file: 'generar-pdf.js', text: jsScript
+        }
 
         sh '''
           echo "📦 Instalando Puppeteer"
@@ -160,27 +180,14 @@ pipeline {
           npm install puppeteer
 
           echo "📄 Generando PDF con Puppeteer"
-          cat > generar-pdf.js <<EOF
-          const puppeteer = require('puppeteer');
-          (async () => {
-            const browser = await puppeteer.launch({
-              headless: true,
-              args: ['--no-sandbox', '--disable-setuid-sandbox']
-            });
-            const page = await browser.newPage();
-            await page.goto(`file://${process.cwd()}/reports/reporte.html`, { waitUntil: 'networkidle0' });
-            await page.pdf({ path: 'reports/reporte_${TIMESTAMP}.pdf', format: 'A4' });
-            await browser.close();
-          })();
-          EOF
-
           node generar-pdf.js
         '''
 
-        stash includes: 'reports/reporte_*.pdf', name: 'k6-pdf'
+        sh 'ls -l reports/' // Confirmamos que el PDF se generó
+
+        stash includes: "reports/reporte_${env.TIMESTAMP}.pdf", name: 'k6-pdf'
       }
     }
-
 
     stage('Generar y subir reporte') {
       steps {
