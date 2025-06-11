@@ -83,19 +83,28 @@ pipeline {
       }
       steps {
         sh '''
-          apk add --no-cache curl unzip
-          curl -s https://github.com/grafana/k6/releases/download/v0.46.0/k6-v0.46.0-linux-amd64.tar.gz -L -o k6.tar.gz
+          echo "📦 Instalando dependencias básicas"
+          apk add --no-cache curl unzip nodejs npm
+
+          echo "⬇️ Descargando k6"
+          curl -sL https://github.com/grafana/k6/releases/download/v0.46.0/k6-v0.46.0-linux-amd64.tar.gz -o k6.tar.gz
           tar -xzf k6.tar.gz
           mv k6-v0.46.0-linux-amd64/k6 /usr/local/bin/k6
 
+          echo "🔧 Instalando k6-reporter"
           npm install -g k6-reporter
 
+          echo "🚀 Ejecutando pruebas de carga"
           k6 run tests/test-k6.js --out json=resultado.json
+
+          echo "📄 Generando reporte HTML"
           k6-reporter resultado.json > reporte.html
         '''
+
         stash includes: 'resultado.json,reporte.html', name: 'k6-report'
       }
     }
+
 
 
     stage('Generar y subir reporte') {
