@@ -1,0 +1,325 @@
+openapi: 3.1.0
+info:
+  title: API de Movimientos Bancarios
+  description: API para consultar movimientos de cuentas y tarjetas
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000
+    description: Servidor local
+  
+tags: 
+  - name: Movimientos
+    description: Consultas generales de movimientos
+  - name: Movimiento_Detalle
+    description: Consultas específicas de movimientos
+
+paths:
+  /api/movimientos/ahorro:
+    get:
+      tags:
+        - Movimientos
+      summary: Obtener movimientos de cuenta de ahorro
+      parameters:
+        - name: X-Numero-Cuenta
+          in: header
+          required: true
+          schema:
+            type: string
+          example: "AHO-123456"
+      responses:
+        '200':
+          description: Lista de movimientos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MovimientoResumen'
+        '400':
+          description: Movimiento no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBadRequest'
+        '404':
+          description: Movimiento no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNoFound'
+
+  /api/movimientos/corriente:
+    get:
+      tags:
+          - Movimientos
+      summary: Obtener movimientos de cuenta corriente
+      parameters:
+        - name: X-Numero-Cuenta
+          in: header
+          required: true
+          schema:
+            type: string
+          example: "COR-654321"
+      responses:
+        '200':
+          description: Lista de movimientos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MovimientoResumen'
+        '400':
+          description: Movimiento no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBadRequest'
+        '404':
+          description: Movimiento no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNoFound'
+  
+  /api/movimientos/tarjetas:
+    get:
+      tags:
+        - Movimientos
+      summary: Obtener movimientos de tarjeta de crédito
+      parameters:
+        - name: X-Numero-Tarjeta
+          in: header
+          required: true
+          schema:
+            type: string
+          example: "TARJ-4567890123"
+      responses:
+        '200':
+          description: Lista de movimientos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MovimientoResumen'
+        '400':
+          description: Movimiento no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBadRequest'
+        '404':
+          description: Movimiento no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNoFound'
+
+  /api/movimientos/ahorro/detalle:
+    get:
+      tags:
+        - Movimiento_Detalle
+      summary: Obtener detalle de un movimiento específico de cuenta de ahorro
+      parameters:
+        - name: X-Numero-Cuenta
+          in: header
+          required: true
+          schema:
+            type: string
+          example: "AHO-123456"
+        - name: X-Movimiento-ID
+          in: header
+          required: true
+          schema:
+            type: string
+          example: "mov-789"
+      responses:
+        '200':
+          description: Detalle del movimiento
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovimientoDetalle'
+        '400':
+          description: Movimiento no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBadRequest'
+        '404':
+          description: Movimiento no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNoFound'
+
+  /api/movimientos/corriente/detalle:
+    get:
+      tags:
+        - Movimiento_Detalle
+      summary: Obtener detalle de un movimiento específico de cuenta corriente
+      parameters:
+        - name: X-Numero-Cuenta
+          in: header
+          required: true
+          schema:
+            type: string
+          example: "COR-654321"
+        - name: X-Movimiento-ID
+          in: header
+          required: true
+          schema:
+            type: string
+          example: "mov-789"
+      responses:
+        '200':
+          description: Detalle del movimiento
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovimientoDetalle'
+        '400':
+          description: Movimiento no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBadRequest'
+        '404':
+          description: Movimiento no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNoFound'
+
+  /api/movimientos/tarjetas/detalle:
+    get:
+      tags:
+        - Movimiento_Detalle
+      summary: Obtener detalle de un movimiento específico de tarjeta de crédito
+      parameters:
+        - name: X-Numero-Tarjeta
+          in: header
+          required: true
+          schema:
+            type: string
+          example: "TARJ-4567890123"
+        - name: X-Movimiento-ID
+          in: header
+          required: true
+          schema:
+            type: string
+          example: "mov-789"
+      responses:
+        '200':
+          description: Detalle del movimiento
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovimientoDetalle'
+        '400':
+          description: Movimiento no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBadRequest'
+        '404':
+          description: Movimiento no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNoFound'
+
+components:
+  schemas:
+    MovimientoResumen:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "mov-123"
+        fecha:
+          type: string
+          format: date-time
+          example: "2023-05-15T10:30:00Z"
+        descripcion:
+          type: string
+          example: "Compra en supermercado"
+        monto:
+          type: number
+          format: float
+          example: 45.99
+        tipo:
+          type: string
+          enum: [DEBITO, CREDITO]
+          example: "DEBITO"
+        referencia:
+          type: string
+          example: "DEP-001..."
+
+    MovimientoDetalle:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "mov-123"
+        fecha:
+          type: string
+          format: date-time
+          example: "2023-05-15T10:30:00Z"
+        descripcion:
+          type: string
+          example: "Compra en supermercado"
+        monto:
+          type: number
+          format: float
+          example: 45.99
+        tipo:
+          type: string
+          enum: [DEBITO, CREDITO]
+          example: "DEBITO"
+        referencia:
+          type: string
+          example: "REF-456789"
+        establecimiento:
+          type: string
+          example: "Supermercado XYZ"
+        saldoPosterior:
+          type: number
+          format: float
+          example: 1254.01
+
+    ErrorBadRequest:
+      type: object
+      properties:
+        codigo:
+          type: string
+          example: "400"
+        mensaje:
+          type: string
+          example: "Datos de entrada Incorrectos"
+        detalles:
+          type: string
+          example: "Los datos proporcionados no cumplen con lo requerido"
+        timestamp:
+          type: string
+
+    ErrorNoFound:
+      type: object
+      properties:
+        codigo:
+          type: string
+          example: "404"
+        mensaje:
+          type: string
+          example: "Recurso no encontrado"
+        detalles:
+          type: string
+          example: "La cuenta solicitada no existe en nuestros registros"
+        timestamp:
+          type: string
+          
+  
+          format: date-time
+          example: "2023-05-15T12:34:56Z"
