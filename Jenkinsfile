@@ -110,8 +110,11 @@ pipeline {
           apt-get install -y wget ca-certificates fonts-liberation libappindicator3-1 libasound2 libatk-bridge2.0-0 \
             libcups2 libdbus-1-3 libnss3 libx11-xcb1 libxcomposite1 libxdamage1 libxrandr2 xdg-utils libu2f-udev
 
-          echo "⬇️ Instalando Puppeteer"
-          npm install puppeteer
+          echo "⬇️ Instalando herramientas de reporte"
+          npm install -g k6-reporter puppeteer
+
+          echo "📄 Generando HTML con k6-reporter"
+          k6-reporter resultado.json > reporte.html
 
           echo "📄 Generando reporte PDF desde HTML"
           cat > generar-pdf.js <<'EOF'
