@@ -75,10 +75,23 @@ pipeline {
     }
 
     stage('Ejecutar prueba de carga con K6') {
+      agent {
+        docker {
+          image 'node:18-alpine'
+          args '--network host'
+        }
+      }
       steps {
-        sh 'k6 run tests/test-k6.js'
+        sh '''
+          apk add --no-cache curl unzip
+          curl -s https://github.com/grafana/k6/releases/download/v0.46.0/k6-v0.46.0-linux-amd64.tar.gz -L -o k6.tar.gz
+          tar -xzf k6.tar.gz
+          mv k6-v0.46.0-linux-amd64/k6 /usr/local/bin/k6
+          k6 run tests/test-k6.js
+        '''
       }
     }
+
 
     stage('Generar y subir reporte') {
       steps {
