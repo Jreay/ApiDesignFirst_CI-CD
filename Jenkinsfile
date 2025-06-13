@@ -89,7 +89,7 @@ pipeline {
               -Dsonar.projectKey=ApiDesignFirst \
               -Dsonar.sources=. \
               -Dsonar.host.url=http://host.docker.internal:9000 \
-              -Dsonar.login=$SONAR_TOKEN
+              -Dsonar.login=$SONAR_AUTH_TOKEN
           '''
         }
       }
