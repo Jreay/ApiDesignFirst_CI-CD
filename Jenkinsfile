@@ -83,7 +83,7 @@ pipeline {
               sonar-scanner \
                 -Dsonar.projectKey=ApiDesignFirst \
                 -Dsonar.sources=. \
-                -Dsonar.host.url=$SONAR_HOST_URL \
+                -Dsonar.host.url=http://localhost:9000 \
                 -Dsonar.login=$SONAR_TOKEN
             '''
           }
