@@ -7,7 +7,7 @@ const height = 600;
 const chartJSNodeCanvas = new ChartJSNodeCanvas({ width, height });
 
 (async () => {
-  const input = fs.createReadStream('resultado-k6.json');
+  const input = fs.createReadStream('reports/resultado.json'); // corregido
   const rl = readline.createInterface({ input });
 
   const labels = [];
@@ -39,5 +39,5 @@ const chartJSNodeCanvas = new ChartJSNodeCanvas({ width, height });
   };
 
   const buffer = await chartJSNodeCanvas.renderToBuffer(config);
-  fs.writeFileSync('grafico-k6.png', buffer);
+  fs.writeFileSync('reports/grafico_k6.png', buffer);
 })();
