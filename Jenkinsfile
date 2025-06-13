@@ -182,7 +182,7 @@ pipeline {
         sh '''
           echo "📝 Creando HTML del reporte"
           mkdir -p ${REPORT_DIR}
-          cat > ${REPORT_DIR}/reporte.html <<EOF
+          cat > ${REPORT_DIR}/reporte.html <<'EOF'
           <!DOCTYPE html>
           <html>
           <head>
