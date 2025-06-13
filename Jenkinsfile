@@ -76,17 +76,21 @@ pipeline {
 
     stage('Revisión de código con SonarQube') {
       steps {
-        withCredentials([string(credentialsId: 'SONAR_AUTH_TOKEN', variable: 'SONAR_TOKEN')]) {
-          withSonarQubeEnv('SonarQubeServer') {
-            sh '''
-              cd openapi-code
-              sonar-scanner \
-                -Dsonar.projectKey=ApiDesignFirst \
-                -Dsonar.sources=. \
-                -Dsonar.host.url=http://localhost:9000 \
-                -Dsonar.login=${SONAR_TOKEN}
-            '''
-          }
+        withSonarQubeEnv('SonarQubeServer') {
+          sh '''
+            cd openapi-code
+            echo "🔧 Descargando Sonar Scanner..."
+            curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+            unzip sonar-scanner.zip
+            export PATH=$PWD/sonar-scanner-5.0.1.3006-linux/bin:$PATH
+
+            echo "🚀 Ejecutando análisis SonarQube..."
+            sonar-scanner \
+              -Dsonar.projectKey=ApiDesignFirst \
+              -Dsonar.sources=. \
+              -Dsonar.host.url=http://localhost:9000 \
+              -Dsonar.login=$SONAR_TOKEN
+          '''
         }
       }
     }
