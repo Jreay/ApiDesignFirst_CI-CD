@@ -119,11 +119,15 @@ pipeline {
           image 'node:18-bullseye'
         }
       }
+      environment {
+        REPORT_DIR = 'reports'
+      }
       steps {
         sh '''
+          mkdir -p ${REPORT_DIR}
           npm install chartjs-node-canvas
 
-          node <<EOF
+          cat > ${REPORT_DIR}/generarGrafico.js <<'EOF'
           const fs = require('fs');
           const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
 
@@ -156,6 +160,8 @@ pipeline {
             fs.writeFileSync('${REPORT_DIR}/grafico_k6.png', image);
           })();
           EOF
+
+          node ${REPORT_DIR}/generarGrafico.js
         '''
       }
     }
