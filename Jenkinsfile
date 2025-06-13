@@ -74,6 +74,23 @@ pipeline {
       }
     }
 
+    stage('Revisión de código con SonarQube') {
+      steps {
+        withCredentials([string(credentialsId: 'SONAR_AUTH_TOKEN', variable: 'SONAR_TOKEN')]) {
+          withSonarQubeEnv('SonarQubeServer') {
+            sh '''
+              cd openapi-code
+              sonar-scanner \
+                -Dsonar.projectKey=ApiDesignFirst \
+                -Dsonar.sources=. \
+                -Dsonar.host.url=$SONAR_HOST_URL \
+                -Dsonar.login=$SONAR_TOKEN
+            '''
+          }
+        }
+      }
+    }
+
     stage('Ejecutar prueba de carga con K6') {
       agent {
         docker {
@@ -87,7 +104,54 @@ pipeline {
           curl -s https://github.com/grafana/k6/releases/download/v0.46.0/k6-v0.46.0-linux-amd64.tar.gz -L -o k6.tar.gz
           tar -xzf k6.tar.gz
           mv k6-v0.46.0-linux-amd64/k6 /usr/local/bin/k6
-          k6 run tests/test-k6.js --out json=resultado.json
+          k6 run tests/test-k6.js --out json=${REPORT_DIR}/resultado.json
+        '''
+      }
+    }
+
+    stage('Generar gráficos desde resultados K6') {
+      agent {
+        docker {
+          image 'node:18-bullseye'
+        }
+      }
+      steps {
+        sh '''
+          npm install chartjs-node-canvas
+
+          node <<EOF
+          const fs = require('fs');
+          const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
+
+          const width = 800;
+          const height = 400;
+          const canvasRenderService = new ChartJSNodeCanvas({ width, height });
+
+          const rawData = fs.readFileSync('${REPORT_DIR}/resultado.json');
+          const json = JSON.parse(rawData);
+
+          const labels = Object.keys(json.metrics).filter(k => k.includes('http_req_duration'));
+          const durations = labels.map(k => json.metrics[k].values.avg);
+
+          (async () => {
+            const image = await canvasRenderService.renderToBuffer({
+              type: 'bar',
+              data: {
+                labels: labels,
+                datasets: [{
+                  label: 'Avg Duration (ms)',
+                  data: durations,
+                  backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                }]
+              },
+              options: {
+                responsive: false,
+                plugins: { title: { display: true, text: 'Resultados de K6 - Duración promedio' } }
+              }
+            });
+            fs.writeFileSync('${REPORT_DIR}/grafico_k6.png', image);
+          })();
+          EOF
         '''
       }
     }
@@ -117,6 +181,7 @@ pipeline {
             <style>
               body { font-family: Arial, sans-serif; margin: 40px; }
               h1 { color: #2c3e50; }
+              img { max-width: 100%; height: auto; margin-top: 20px; }
               table { border-collapse: collapse; width: 100%; margin-top: 20px; }
               th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
               th { background-color: #f2f2f2; }
@@ -127,11 +192,14 @@ pipeline {
             <h1>📋 Reporte del Pipeline - ${TIMESTAMP}</h1>
             <table>
               <tr><th>Paso</th><th>Estado</th></tr>
-              <tr><td>Validación de contratos API</td><td class="status">✅</td></tr>
-              <tr><td>Generación de contrato desde código</td><td class="status">✅</td></tr>
-              <tr><td>Comparación de contratos</td><td class="status">✅</td></tr>
-              <tr><td>Pruebas de carga con K6</td><td class="status">✅</td></tr>
+              <tr><td>Validación de contratos API</td><td class="status">Pasado</td></tr>
+              <tr><td>Generación de contrato desde código</td><td class="status">Pasado</td></tr>
+              <tr><td>Comparación de contratos</td><td class="status">Pasado</td></tr>
+              <tr><td>Revisión de código con SonarQube</td><td class="status">Pasado</td></tr>
+              <tr><td>Pruebas de carga con K6</td><td class="status">Pasado</td></tr>
             </table>
+            <h2>📈 Gráfico de resultados K6</h2>
+            <img src="grafico_k6.png" alt="Gráfico de rendimiento K6">
           </body>
           </html>
           EOF
@@ -183,7 +251,7 @@ pipeline {
           node generar-pdf.js
         '''
 
-        sh 'ls -l reports/' // Confirmamos que el PDF se generó
+        sh 'ls -l reports/'
 
         stash includes: "reports/reporte_${env.TIMESTAMP}.pdf", name: 'k6-pdf'
       }
@@ -200,13 +268,15 @@ pipeline {
 
             git remote set-url origin https://${GIT_USER}:${GIT_PASS}@github.com/Jreay/ApiDesignFirst_CI-CD.git
 
+            git checkout -B main
             git add reports || true
             git commit -m "📊 Reporte generado automáticamente: ${TIMESTAMP}" || true
-            git push origin HEAD:main
+            git push origin main
           '''
         }
       }
     }
+  }
   }
 
   post {
