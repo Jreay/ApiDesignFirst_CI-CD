@@ -173,16 +173,14 @@ pipeline {
           args '--network host'
         }
       }
+      environment {
+        REPORT_DIR = 'reports'
+      }
       steps {
         script {
           env.TIMESTAMP = sh(script: "date +'%Y-%m-%d_%H-%M-%S'", returnStdout: true).trim()
-          env.REPORT_DIR = 'reports'
-        }
 
-        sh '''
-          echo "📝 Creando HTML del reporte"
-          mkdir -p ${REPORT_DIR}
-          cat > ${REPORT_DIR}/reporte.html <<'EOF'
+          def htmlContent = """
           <!DOCTYPE html>
           <html>
           <head>
@@ -199,7 +197,7 @@ pipeline {
             </style>
           </head>
           <body>
-            <h1>📋 Reporte del Pipeline - ${TIMESTAMP}</h1>
+            <h1>📋 Reporte del Pipeline - ${env.TIMESTAMP}</h1>
             <table>
               <tr><th>Paso</th><th>Estado</th></tr>
               <tr><td>Validación de contratos API</td><td class="status">Pasado</td></tr>
@@ -208,16 +206,21 @@ pipeline {
               <tr><td>Revisión de código con SonarQube</td><td class="status">Pasado</td></tr>
               <tr><td>Pruebas de carga con K6</td><td class="status">Pasado</td></tr>
             </table>
+
             <h2>📈 Gráfico de resultados K6</h2>
             <img src="grafico_k6.png" alt="Gráfico de rendimiento K6">
           </body>
           </html>
-          EOF
-        '''
+          """
+
+          sh "mkdir -p ${env.REPORT_DIR}"
+          writeFile file: "${env.REPORT_DIR}/reporte.html", text: htmlContent
+        }
 
         stash includes: "${REPORT_DIR}/reporte.html", name: 'html-pipeline'
       }
     }
+
 
     stage('Generar PDF del pipeline') {
       agent {
