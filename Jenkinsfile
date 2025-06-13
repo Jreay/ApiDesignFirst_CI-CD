@@ -85,7 +85,7 @@ pipeline {
             export PATH=$PWD/sonar-scanner-5.0.1.3006-linux/bin:$PATH
 
             echo "🚀 Ejecutando análisis SonarQube..."
-            sonar-scanner \
+            sonar-scanner -X \
               -Dsonar.projectKey=ApiDesignFirst \
               -Dsonar.sources=. \
               -Dsonar.host.url=http://localhost:9000 \
