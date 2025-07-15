@@ -21,7 +21,7 @@ paths:
         - Movimientos
       summary: Obtener movimientos de cuenta de ahorro
       parameters:
-        - name: X-Numero-Cuenta
+        - name: x_numero_cuenta
           in: header
           required: true
           schema:
@@ -55,7 +55,7 @@ paths:
           - Movimientos
       summary: Obtener movimientos de cuenta corriente
       parameters:
-        - name: X-Numero-Cuenta
+        - name: x_numero_cuenta
           in: header
           required: true
           schema:
@@ -89,7 +89,7 @@ paths:
         - Movimientos
       summary: Obtener movimientos de tarjeta de crédito
       parameters:
-        - name: X-Numero-Tarjeta
+        - name: x_numero_tarjeta
           in: header
           required: true
           schema:
@@ -123,13 +123,13 @@ paths:
         - Movimiento_Detalle
       summary: Obtener detalle de un movimiento específico de cuenta de ahorro
       parameters:
-        - name: X-Numero-Cuenta
+        - name: x_numero_cuenta
           in: header
           required: true
           schema:
             type: string
           example: "AHO-123456"
-        - name: X-Movimiento-ID
+        - name: x_movimiento_id
           in: header
           required: true
           schema:
@@ -161,13 +161,13 @@ paths:
         - Movimiento_Detalle
       summary: Obtener detalle de un movimiento específico de cuenta corriente
       parameters:
-        - name: X-Numero-Cuenta
+        - name: x_numero_cuenta
           in: header
           required: true
           schema:
             type: string
           example: "COR-654321"
-        - name: X-Movimiento-ID
+        - name: x_movimiento_id
           in: header
           required: true
           schema:
@@ -199,13 +199,13 @@ paths:
         - Movimiento_Detalle
       summary: Obtener detalle de un movimiento específico de tarjeta de crédito
       parameters:
-        - name: X-Numero-Tarjeta
+        - name: x_numero_tarjeta
           in: header
           required: true
           schema:
             type: string
           example: "TARJ-4567890123"
-        - name: X-Movimiento-ID
+        - name: x_movimiento_id
           in: header
           required: true
           schema:

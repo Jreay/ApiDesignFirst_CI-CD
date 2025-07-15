@@ -1,6 +1,10 @@
 extends: spectral:oas
+
 rules:
+  # Desactivadas
   info-contact: off
+
+  # MÉTRICAS: DESCRIPCIÓN
   operation-summary:
     description: Cada operación debe tener un resumen (summary)
     severity: error
@@ -8,6 +12,7 @@ rules:
     then:
       field: summary
       function: truthy
+
   no-eval-in-descriptions:
     description: No se permite uso de la palabra 'eval' en descripciones
     severity: error
@@ -16,10 +21,57 @@ rules:
       function: pattern
       functionOptions:
         notMatch: eval
-  path-params-required:
-    description: Todos los parámetros en el path deben marcarse como 'required'
+
+  # MÉTRICAS: CONSISTENCIA
+  detalle-endpoint-consistency:
+    description: Las rutas que contienen '/detalle' deben tener parámetros obligatorios y un summary consistente
     severity: error
-    given: "$..parameters[?(@.in=='path')]"
+    given: "$.paths[?(@property.match(/\\/detalle$/))].get"
     then:
-      field: required
-      function: truthy
+      - field: summary
+        function: pattern
+        functionOptions:
+          match: "^Obtener detalle.*"
+      - field: parameters
+        function: schema
+        functionOptions:
+          schema:
+            type: array
+            contains:
+              type: object
+              required: [name, in, required]
+              properties:
+                name:
+                  enum: ["x_movimiento_id"]
+                in:
+                  enum: ["header"]
+                required:
+                  const: true
+
+  reuse-error-response:
+    description: Las respuestas de error deben usar un esquema común '$ref'
+    severity: warn
+    given: "$.paths[*][*].responses[?(@property >= 400)]"
+    then:
+      field: content.application/json.schema.$ref
+      function: defined
+
+  # MÉTRICAS: NOMENCLATURA
+  parameter-names-snake-case:
+    description: Los nombres de los parámetros deben estar en snake_case
+    severity: warn
+    given: "$.paths[*][*].parameters[*]"
+    then:
+      field: name
+      function: pattern
+      functionOptions:
+        match: "^[a-z0-9_]+$"
+
+  path-kebab-case:
+    description: Los nombres de los paths deben estar en kebab-case
+    severity: warn
+    given: "$.paths[*]~"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^(/[a-z0-9\\-{}]+)+$"
