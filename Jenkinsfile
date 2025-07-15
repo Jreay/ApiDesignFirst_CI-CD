@@ -55,7 +55,10 @@ pipeline {
       steps {
         unstash 'reporte-pdf'
 
-        withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+        script {
+          def reportName = "reporte_${env.TIMESTAMP}.pdf"
+
+          withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
             sh """
               git config user.name "jenkins-bot"
               git config user.email "jenkins@localhost"
@@ -66,6 +69,7 @@ pipeline {
               git commit -m \"📄 Reporte Spectral generado automáticamente: ${reportName}\" || true
               git push origin main
             """
+          }
         }
       }
     }
