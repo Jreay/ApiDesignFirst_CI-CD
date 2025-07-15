@@ -34,19 +34,22 @@ pipeline {
       steps {
         script {
           env.TIMESTAMP = sh(script: "date +'%Y%m%d_%H%M'", returnStdout: true).trim()
-        }
-        sh """
-          pip install fpdf
-          python3 scripts/generar_reporte.py reports/resultado_spectral.txt reporte_${env.TIMESTAMP}.pdf
-          echo "reporte_${env.TIMESTAMP}.pdf" > ${REPORT_DIR}/last_report_name.txt
-        """
-        script {
           def reportName = "reporte_${env.TIMESTAMP}.pdf"
-          stash includes: "${REPORT_DIR}/${reportName}", name: 'reporte-pdf'
-        }
+          def reportPath = "reports/${reportName}"
 
+          sh """
+            mkdir -p reports
+            pip install fpdf
+            python3 scripts/generar_reporte.py reports/resultado_spectral.txt ${reportName}
+            mv ${reportName} ${reportPath}
+            echo "${reportName}" > reports/last_report_name.txt
+            ls -lh reports
+          """
+          stash includes: "${reportPath}", name: 'reporte-pdf'
+        }
       }
     }
+
 
     stage('Subir reporte al repositorio') {
       steps {
