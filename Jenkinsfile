@@ -35,11 +35,12 @@ pipeline {
         script {
           env.TIMESTAMP = sh(script: "date +'%Y%m%d_%H%M'", returnStdout: true).trim()
         }
-        sh '''
+        sh """
           pip install fpdf
-          python3 scripts/generar_reporte.py reports/resultado_spectral.txt reporte_${TIMESTAMP}.pdf
-          mv reporte_${TIMESTAMP}.pdf ${REPORT_DIR}/
-        '''
+          python3 scripts/generar_reporte.py reports/resultado_spectral.txt reporte_${env.TIMESTAMP}.pdf
+          mv reporte_${env.TIMESTAMP}.pdf ${REPORT_DIR}/
+          echo "reporte_${env.TIMESTAMP}.pdf" > ${REPORT_DIR}/last_report_name.txt
+        """
       }
     }
 
