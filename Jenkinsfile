@@ -40,7 +40,7 @@ pipeline {
           python3 scripts/generar_reporte.py reports/resultado_spectral.txt reporte_${env.TIMESTAMP}.pdf
           echo "reporte_${env.TIMESTAMP}.pdf" > ${REPORT_DIR}/last_report_name.txt
         """
-        stash includes: "${REPORT_DIR}/reporte_${env.TIMESTAMP}.pdf", name: 'reporte-pdf'
+        stash includes: "reporte_${env.TIMESTAMP}.pdf", name: 'reporte-pdf'
 
       }
     }
