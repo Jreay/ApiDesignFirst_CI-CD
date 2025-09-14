@@ -1,0 +1,185 @@
+openapi: 3.1.0
+info:
+  title: API de Movimientos Bancarios
+  version: 1.0.0
+  description: API para consultar movimientos de cuentas y tarjetas
+servers:
+  - url: http://localhost:3000
+    description: Servidor Local
+  - url: https://openapi-09h0.onrender.com
+    description: Servidor Desarrollo
+paths:
+  /api/movimientos/ahorro/detalle:
+    get:
+      summary: Obtener detalle de un movimiento específico de cuenta de ahorro
+      tags:
+        - Movimiento_Detalle
+      parameters:
+        - name: x_numero_cuenta
+          in: header
+          required: true
+          schema:
+            type: string
+          example: AHO-123456
+        - name: x_movimiento_id
+          in: header
+          required: true
+          schema:
+            type: string
+          example: mov-123
+      responses:
+        '200':
+          description: Detalle del movimiento
+          content:
+            application/json:
+              example:
+                id: mov-123
+                fecha: '2023-05-15T10:30:00Z'
+                descripcion: Depósito inicial
+                monto: 1000
+                tipo: CREDITO
+                referencia: DEP-001
+                establecimiento: Banco Principal
+                saldoPosterior: 1000
+  /api/movimientos/corriente/detalle:
+    get:
+      summary: Obtener detalle de un movimiento específico de cuenta corriente
+      tags:
+        - Movimiento_Detalle
+      parameters:
+        - name: x_numero_cuenta
+          in: header
+          required: true
+          schema:
+            type: string
+          example: COR-654321
+        - name: x_movimiento_id
+          in: header
+          required: true
+          schema:
+            type: string
+          example: mov-456
+      responses:
+        '200':
+          description: Detalle del movimiento
+          content:
+            application/json:
+              example:
+                id: mov-456
+                fecha: '2023-05-16T14:45:00Z'
+                descripcion: Pago de servicios
+                monto: 150.5
+                tipo: DEBITO
+                referencia: PAGO-002
+                establecimiento: Compañía de Agua
+                saldoPosterior: 849.5
+  /api/movimientos/tarjetas/detalle:
+    get:
+      summary: Obtener detalle de un movimiento específico de tarjeta de crédito
+      tags:
+        - Movimiento_Detalle
+      parameters:
+        - name: x_numero_tarjeta
+          in: header
+          required: true
+          schema:
+            type: string
+          example: TARJ-4567890123
+        - name: x_movimiento_id
+          in: header
+          required: true
+          schema:
+            type: string
+          example: mov-789
+      responses:
+        '200':
+          description: Detalle del movimiento
+          content:
+            application/json:
+              example:
+                id: mov-789
+                fecha: '2023-05-17T09:15:00Z'
+                descripcion: Compra en supermercado
+                monto: 45.99
+                tipo: DEBITO
+                referencia: COMP-003
+                establecimiento: Supermercado XYZ
+                saldoPosterior: 954.01
+  /api/movimientos/ahorro:
+    get:
+      summary: Obtener movimientos de cuenta de ahorro
+      tags:
+        - Movimientos
+      parameters:
+        - name: x_numero_cuenta
+          in: header
+          required: true
+          schema:
+            type: string
+          example: AHO-123456
+      responses:
+        '200':
+          description: Lista de movimientos
+          content:
+            application/json:
+              example:
+                - id: mov-123
+                  fecha: '2023-05-15T10:30:00Z'
+                  descripcion: Depósito inicial
+                  monto: 1000
+                  tipo: CREDITO
+                  referencia: DEP-001...
+  /api/movimientos/corriente:
+    get:
+      summary: Obtener movimientos de cuenta corriente
+      tags:
+        - Movimientos
+      parameters:
+        - name: x_numero_cuenta
+          in: header
+          required: true
+          schema:
+            type: string
+          example: COR-654321
+      responses:
+        '200':
+          description: Lista de movimientos
+          content:
+            application/json:
+              example:
+                - id: mov-456
+                  fecha: '2023-05-16T14:45:00Z'
+                  descripcion: Pago de servicios
+                  monto: 150.5
+                  tipo: DEBITO
+                  referencia: PAGO-002...
+  /api/movimientos/tarjetas:
+    get:
+      summary: Obtener movimientos de tarjeta de crédito
+      tags:
+        - Movimientos
+      parameters:
+        - name: x_numero_tarjeta
+          in: header
+          required: true
+          schema:
+            type: string
+          example: TARJ-4567890123
+      responses:
+        '200':
+          description: Lista de movimientos
+          content:
+            application/json:
+              example:
+                - id: mov-789
+                  fecha: '2023-05-17T09:15:00Z'
+                  descripcion: Compra en supermercado
+                  monto: 45.99
+                  tipo: DEBITO
+                  referencia: COMP-003...
+components: {}
+tags:
+  - name: Movimientos
+    description: Consultas generales de movimientos
+  - name: Movimiento_Detalle
+    description: Consultas específicas de movimientos

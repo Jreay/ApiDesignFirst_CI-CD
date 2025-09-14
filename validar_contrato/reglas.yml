@@ -1,0 +1,94 @@
+rules:
+  # MÉTRICAS: DESCRIPCIÓN
+  operation-summary:
+    description: Cada operación debe tener un campo "summary" no vacio
+    severity: error
+    given: "$.paths[*][*]"
+    then:
+      field: summary
+      function: truthy
+
+  no-eval-in-descriptions:
+    description: No debe haber la palabra "eval" en ningún campo "summary"
+    severity: error
+    given: "$..summary"
+    then:
+      function: pattern
+      functionOptions:
+        notMatch: eval
+
+  # MÉTRICAS: CONSISTENCIA
+  detalle-endpoint-consistency:
+    description: Endpoints que terminan en "/detalle" deben tener el parametro "x_movimiento_id"
+    severity: error
+    given: "$.paths[?(@property.match(/\\/detalle$/))].get"
+    then:
+      - field: parameters
+        function: schema
+        functionOptions:
+          schema:
+            type: array
+            contains:
+              type: object
+              required: [name, in, required]
+              properties:
+                name:
+                  enum: ["x_movimiento_id"]
+                in:
+                  enum: ["header"]
+                required:
+                  const: true
+
+  # MÉTRICAS: NOMENCLATURA
+  parameter-names-snake-case:
+    description: Los nombres de parámetros deben estar en snake_case
+    severity: warn
+    given: "$.paths[*][*].parameters[*]"
+    then:
+      field: name
+      function: pattern
+      functionOptions:
+        match: "^[a-z0-9_]+$"
+
+  path-kebab-case:
+    description: Los paths deben estar en kebab-case
+    severity: warn
+    given: "$.paths[*]~"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^(/[a-z0-9\\-{}]+)+$"
+  
+  # MÉTRICAS: ESCRITURA
+  summary-length:
+    description: El summary debe tener 10-120 caracteres
+    severity: warn
+    given: "$.paths[*][*]"
+    then:
+      - field: summary
+        function: schema
+        functionOptions:
+          schema:
+            type: string
+            minLength: 10
+            maxLength: 120
+
+  summary-verb:
+    description: El summary debe iniciar con "Consultar" o "Listar"
+    severity: info
+    given: "$.paths[*][*]"
+    then:
+      - field: summary
+        function: pattern
+        functionOptions:
+          match: "^(Consultar|Listar)\\b.*"
+  
+  summary-style:
+    description: El summary debe terminar con punto "."
+    severity: hint
+    given: "$.paths[*][*]"
+    then:
+      - field: summary
+        function: pattern
+        functionOptions:
+          match: "[^.]+\\.$"

@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "js-yaml": "^4.1.0",
+    "swagger-jsdoc": "^6.2.8"
+  },
+  "scripts": {
+    "generarContrato": "node ./validar_contrato/generarContrato.js ",
+    "validarContrato": "node ./validar_contrato/validadorContratos.js",
+    "pruebaK6": "k6 run ./prueba_rendimiento/test_k6.js"
+  }
+}
