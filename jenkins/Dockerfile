@@ -8,13 +8,17 @@ RUN apt-get update && apt-get install -y \
     nodejs npm \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Instalar K6 (recomendado para rendimiento estable en pruebas)
-RUN curl -s https://packagecloud.io/install/repositories/loadimpact/k6/script.deb.sh | bash && \
+# Instalar K6 
+RUN apt-get update && \
+    apt-get install -y gnupg software-properties-common && \
+    curl -fsSL https://dl.k6.io/key.gpg | gpg --dearmor -o /usr/share/keyrings/k6-archive-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | tee /etc/apt/sources.list.d/k6.list && \
+    apt-get update && \
     apt-get install -y k6
 
 # Instalar paquetes Python
-COPY ../generador_reporte/requirements.txt /tmp/requirements.txt
-RUN pip3 install -r /tmp/requirements.txt
+COPY ../requirements.txt /tmp/requirements.txt
+RUN pip3 install --break-system-packages -r /tmp/requirements.txt
 
 # Docker CLI
 RUN curl -fsSL https://get.docker.com | bash
