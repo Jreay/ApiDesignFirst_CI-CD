@@ -17,6 +17,7 @@ pipeline {
       steps {
         sh '''
           echo "Validar contrato original con espectral"
+          export PATH=$PATH:/usr/local/bin
           mkdir -p ./resultados
           spectral lint ./contrato/openapi.yaml -r ./validar_contrato/reglas.yml --format json > ./resultados/resultadoEspectral.json
           
