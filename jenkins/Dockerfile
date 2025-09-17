@@ -2,11 +2,15 @@ FROM jenkins/jenkins:lts-jdk17
 
 USER root
 
+# Instalar dependencias del sistema + Node + npm
 RUN apt-get update && apt-get install -y \
     python3 python3-pip \
     curl wget git jq gnupg lsb-release \
     nodejs npm \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Instalar Spectral
+RUN npm install -g @stoplight/spectral-cli
 
 # Instalar K6 
 RUN apt-get update && \

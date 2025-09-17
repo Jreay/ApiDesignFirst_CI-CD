@@ -18,7 +18,7 @@ pipeline {
         sh '''
           echo "Validar contrato original con espectral"
           mkdir -p ./resultados
-          npx spectral lint ./contrato/openapi.yaml -r ./validar_contrato/reglas.yml --format json > ./resultados/resultadoEspectral.json
+          spectral lint ./contrato/openapi.yaml -r ./validar_contrato/reglas.yml --format json > ./resultados/resultadoEspectral.json
           
           echo "Generar contrato basado en el codigo"
           rm -rf OpenAPI
