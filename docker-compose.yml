@@ -46,6 +46,7 @@ services:
     build:
       context: ./jenkins
       dockerfile: Dockerfile
+    image: mi-jenkins-personal:lts
     container_name: jenkins
     user: root
     ports:

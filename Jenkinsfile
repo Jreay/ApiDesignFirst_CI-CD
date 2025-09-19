@@ -1,8 +1,8 @@
 pipeline {
   agent {
     docker {
-      image 'node:18'
-      args '-v /var/run/docker.sock:/var/run/docker.sock'
+      image 'mi-jenkins-personal:lts'
+      args '-v /var/run/docker.sock:/var/run/docker.sock -u root'
     }
   }
 
@@ -17,7 +17,6 @@ pipeline {
       steps {
         sh '''
           echo "Validar contrato original con espectral"
-          export PATH=$PATH:/usr/local/bin
           mkdir -p ./resultados
           spectral lint ./contrato/openapi.yaml -r ./validar_contrato/reglas.yml --format json > ./resultados/resultadoEspectral.json
           
