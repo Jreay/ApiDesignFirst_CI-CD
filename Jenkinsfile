@@ -46,14 +46,11 @@ pipeline {
               npm run test
 
               echo "Escaneando api con Sonar"
-              pwd
-              ls -l
-
               docker run --rm \
                 --network apidesignfirst_ci-cd_cicd \
                 -e SONAR_HOST_URL="$SONAR_HOST_URL" \
                 -e SONAR_TOKEN="$SONAR_TOKEN" \
-                -v "$(pwd)":/usr/src \
+                -v "$(pwd)":/usr \
                 sonarsource/sonar-scanner-cli
 
               echo "Guarda el resultado Sonar"
