@@ -50,7 +50,7 @@ pipeline {
                 --network apidesignfirst_ci-cd_cicd \
                 -e SONAR_HOST_URL="$SONAR_HOST_URL" \
                 -e SONAR_TOKEN="$SONAR_TOKEN" \
-                -v "$PWD":/usr/src \
+                -v "$(pwd)":/usr/src \
                 sonarsource/sonar-scanner-cli
 
               echo "Guarda el resultado Sonar"
