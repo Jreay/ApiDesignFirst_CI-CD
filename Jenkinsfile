@@ -23,6 +23,7 @@ pipeline {
           echo "Generar contrato basado en el codigo"
           rm -rf OpenAPI
           git clone --branch dev-main https://github.com/Jreay/OpenAPI.git OpenAPI
+          npm i
           npm run generarContrato
 
           echo "Compara contratos (Original vs Generado)"
