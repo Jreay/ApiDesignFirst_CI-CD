@@ -46,6 +46,9 @@ pipeline {
               npm run test
 
               echo "Escaneando api con Sonar"
+              pwd
+              ls -l
+
               docker run --rm \
                 --network apidesignfirst_ci-cd_cicd \
                 -e SONAR_HOST_URL="$SONAR_HOST_URL" \
