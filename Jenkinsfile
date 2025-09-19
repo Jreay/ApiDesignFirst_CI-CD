@@ -43,6 +43,7 @@ pipeline {
 
             echo "Escaneando api con Sonar"
             docker run --rm \
+              --network apidesignfirst_ci-cd_cicd \
               -e SONAR_HOST_URL="${SONAR_HOST_URL}" \
               -e SONAR_TOKEN="${SONAR_TOKEN}" \
               -v "$PWD":/usr/src \
