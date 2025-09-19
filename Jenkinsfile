@@ -7,7 +7,6 @@ pipeline {
   }
 
   environment {
-    SONAR_HOST_URL = 'http://sonarqube:9000'
     TIMESTAMP = "${new Date().format('yyyyMMdd_HHmm')}"
   }
 
@@ -34,26 +33,33 @@ pipeline {
 
     stage('Validación de código') {
       steps {
-          sh ''' 
-            cd OpenAPI
-            npm i
-            
-            echo "Ejecutar pruebas jest"
-            npm run test
+      withCredentials([
+        string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')
+        ]) 
+        {
+          withEnv(['SONAR_HOST_URL=http://sonarqube:9000']) {
+            sh '''
+              cd OpenAPI
+              npm i
+              
+              echo "Ejecutar pruebas jest"
+              npm run test
+              
+              echo "Escaneando api con Sonar"
+              docker run --rm \
+                --network apidesignfirst_ci-cd_cicd \
+                -e SONAR_HOST_URL="$SONAR_HOST_URL" \
+                -e SONAR_TOKEN="$SONAR_TOKEN" \
+                -v "$PWD":/usr/src \
+                sonarsource/sonar-scanner-cl
 
-            echo "Escaneando api con Sonar"
-            docker run --rm \
-              --network apidesignfirst_ci-cd_cicd \
-              -e SONAR_HOST_URL="${SONAR_HOST_URL}" \
-              -e SONAR_TOKEN="${SONAR_TOKEN}" \
-              -v "$PWD":/usr/src \
-              sonarsource/sonar-scanner-cli
-
-            echo "Guarda el resultado K6"
-            curl --location "${SONAR_HOST_URL}/api/measures/component?component=open-api&metricKeys=bugs,vulnerabilities,code_smells,coverage,duplicated_lines_density,ncloc" \
-            --header "Authorization: Bearer ${SONAR_TOKEN}" > ./resultados/resultadoSonar.json
-          '''
+              echo "Guarda el resultado Sonar"
+              curl --location "$SONAR_HOST_URL/api/measures/component?component=open-api&metricKeys=bugs,vulnerabilities,code_smells,coverage,duplicated_lines_density,ncloc" \
+              --header "Authorization: Bearer $SONAR_TOKEN" > ./resultados/resultadoSonar.json
+            '''
+          }
         }
+      }
     }
 
     stage('Pruebas rendimiento') {
