@@ -2,7 +2,7 @@ pipeline {
   agent {
     docker {
       image 'mi-jenkins-personal:lts'
-      args '-v /var/run/docker.sock:/var/run/docker.sock -u root'
+      args '--network apidesignfirst_ci-cd_cicd -v /var/run/docker.sock:/var/run/docker.sock -u root'
     }
   }
 
