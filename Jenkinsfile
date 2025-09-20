@@ -69,9 +69,7 @@ pipeline {
     stage('Generar reporte PDF') {
       steps {
         sh '''
-          pwd
-          ls -l
-          pip install -r requirements.txt || true
+          mkdir -p reportes
           python3 ./generador_reporte/main.py
         '''
       }
