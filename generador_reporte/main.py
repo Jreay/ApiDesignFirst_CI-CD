@@ -118,6 +118,5 @@ else:
 
 # Guardar y finalizar
 pdf.output(output_filename)
-utils.vaciar_cache()
 
 print(f"✅ PDF generado: {output_filename}")
