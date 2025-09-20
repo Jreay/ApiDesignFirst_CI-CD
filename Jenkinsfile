@@ -33,35 +33,26 @@ pipeline {
 
     stage('Validación de código') {
       steps {
-      withCredentials([
-        string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')
-        ]) 
-        {
-          withEnv(['SONAR_HOST_URL=http://sonarqube:9000']) {
-            sh '''
-              cd OpenAPI
-              npm i
-              
-              echo "Ejecutar pruebas jest"
-              npm run test
+        withCredentials([
+          string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')
+        ]) {
+          sh '''
+            cd OpenAPI
+            npm i
+            
+            echo "Ejecutar pruebas jest"
+            npm run test
 
-              echo "Escaneando api con Sonar"
-              pwd
-              ls -l
+            echo "Escaneando api con Sonar"
+            sonar-scanner \
+              -Dsonar.host.url=http://sonarqube:9000 \
+              -Dsonar.login=${SONAR_TOKEN}
 
-              docker run --rm \
-                --network apidesignfirst_ci-cd_cicd \
-                -e SONAR_HOST_URL="$SONAR_HOST_URL" \
-                -e SONAR_TOKEN="$SONAR_TOKEN" \
-                -v "$(pwd)":/usr/src \
-                -w /usr/src \
-                sonarsource/sonar-scanner-cli
-
-              echo "Guarda el resultado Sonar"
-              curl --location "$SONAR_HOST_URL/api/measures/component?component=open-api&metricKeys=bugs,vulnerabilities,code_smells,coverage,duplicated_lines_density,ncloc" \
-              --header "Authorization: Bearer $SONAR_TOKEN" > ./resultados/resultadoSonar.json
-            '''
-          }
+            echo "Guarda el resultado Sonar"
+            # Tu comando curl sigue igual aquí...
+            curl --location "http://sonarqube:9000/api/measures/component?component=open-api&metricKeys=bugs,vulnerabilities,code_smells,coverage,duplicated_lines_density,ncloc" \
+            --header "Authorization: Bearer ${SONAR_TOKEN}" > ../resultados/resultadoSonar.json
+          '''
         }
       }
     }
