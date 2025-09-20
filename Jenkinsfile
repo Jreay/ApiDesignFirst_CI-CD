@@ -79,35 +79,37 @@ pipeline {
       steps {
         withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
             sh '''
-              git config user.name "jenkins-bot"
-              git config user.email "jenkins@localhost"
+                git config user.name "jenkins-bot"
+                git config user.email "jenkins@localhost"
+                git remote set-url origin https://${GIT_USER}:${GIT_PASS}@github.com/Jreay/ApiDesignFirst_CI-CD.git
 
-              git remote set-url origin https://${GIT_USER}:${GIT_PASS}@github.com/Jreay/ApiDesignFirst_CI-CD.git
+                git checkout main
+                git pull origin main
 
-              git pull --rebase || true
+                # Actualizar solo la carpeta reportes en ApiDesignFirst_CI-CD
+                git add reportes
+                git commit -m "Reporte generado automáticamente: ${TIMESTAMP}"
 
-              git add reportes || true
-              git commit -m "Reporte generado automáticamente: ${TIMESTAMP}" || true
-              git push origin main
+                git push origin main
             '''
         }
         dir('OpenAPI') {
-          withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
-            sh '''
-              git config user.name "jenkins-bot"
-              git config user.email "jenkins@localhost"
+            withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+                sh '''
+                    git config user.name "jenkins-bot"
+                    git config user.email "jenkins@localhost"
+                    git remote set-url origin https://${GIT_USER}:${GIT_PASS}@github.com/Jreay/OpenAPI.git
 
-              git remote set-url origin https://${GIT_USER}:${GIT_PASS}@github.com/Jreay/OpenAPI.git
+                    # Obtener la ultima version de main main
+                    git checkout main
+                    git pull origin main
 
-              git pull --rebase || true
-
-              git add . || true
-              git commit -m "Auto commit del pipeline: ${TIMESTAMP}" || true
-              
-              #Push de dev-main a main
-              git push origin dev-main:main
-            '''
-          }
+                    # Insertar dev-main en main
+                    git reset --hard origin/dev-main
+                    echo "Rama main actualizada con dev-main"
+                    git push origin main --force 
+                '''
+            }
         }
       }
     } 
