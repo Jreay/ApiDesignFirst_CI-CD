@@ -1,3 +1,5 @@
+def reportTimestamp
+
 pipeline {
   agent {
     docker {
@@ -5,8 +7,6 @@ pipeline {
       args '--network apidesignfirst_ci-cd_cicd -v /var/run/docker.sock:/var/run/docker.sock -u root'
     }
   }
-
-  def reportTimestamp
 
   stages {
 
