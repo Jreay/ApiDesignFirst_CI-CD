@@ -6,9 +6,7 @@ pipeline {
     }
   }
 
-  environment {
-    TIMESTAMP = "${new Date().format('yyyyMMdd_HHmm')}"
-  }
+  def reportTimestamp
 
   stages {
 
@@ -68,10 +66,17 @@ pipeline {
 
     stage('Generar reporte PDF') {
       steps {
-        sh '''
-          mkdir -p reportes
-          python3 ./generador_reporte/main.py
-        '''
+        script {
+          reportTimestamp = new Date().format('yyyyMMdd_HHmm')
+          echo "Timestamp generado: ${reportTimestamp}"
+
+          withEnv(["REPORT_TIMESTAMP=${reportTimestamp}"]) {
+            sh '''
+              mkdir -p reportes
+              python3 ./generador_reporte/main.py
+            '''
+          }
+        }
       }
     }
 
@@ -92,7 +97,7 @@ pipeline {
 
                 # Actualizar solo la carpeta reportes en ApiDesignFirst_CI-CD
                 git add reportes
-                git commit -m "Reporte generado automáticamente: ${TIMESTAMP}"
+                git commit -m "Reporte generado automáticamente: ${reportTimestamp}"
 
                 git push origin main
             '''
