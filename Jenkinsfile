@@ -82,7 +82,11 @@ pipeline {
                 git config user.name "jenkins-bot"
                 git config user.email "jenkins@localhost"
                 git remote set-url origin https://${GIT_USER}:${GIT_PASS}@github.com/Jreay/ApiDesignFirst_CI-CD.git
+                
+                # Limpiar workspace
+                git reset --hard
 
+                # Cambiar y Sincronizar main
                 git checkout main
                 git pull origin main
 
@@ -100,7 +104,10 @@ pipeline {
                     git config user.email "jenkins@localhost"
                     git remote set-url origin https://${GIT_USER}:${GIT_PASS}@github.com/Jreay/OpenAPI.git
 
-                    # Obtener la ultima version de main main
+                    #Limpiar workspace
+                    git reset --hard
+
+                    # Cambiar y Sincronizar main
                     git checkout main
                     git pull origin main
 
