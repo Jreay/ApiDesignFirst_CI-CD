@@ -93,7 +93,7 @@ pipeline {
 
                 # Cambiar y Sincronizar main
                 git checkout main
-                git pull origin main
+                git pull --rebase origin main
 
                 # Actualizar solo la carpeta reportes en ApiDesignFirst_CI-CD
                 git add reportes
