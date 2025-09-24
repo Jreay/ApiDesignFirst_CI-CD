@@ -1,6 +1,5 @@
 import json
 import utils
-import os
 from datetime import datetime
 from generar_PDF import GenerarPDF
 
@@ -18,7 +17,7 @@ sonar_path = f"{input_resultado}resultadoSonar.json"
 k6_path = f"{input_resultado}resultadoK6.json"
 
 # Salida PDF
-fecha_hora = os.getenv('REPORT_TIMESTAMP', datetime.now().strftime("%Y%m%d_%H%M"))
+fecha_hora = datetime.now().strftime("%Y%m%d_%H%M")
 output_filename = f"./reportes/reporte_{fecha_hora}.pdf"
 
 

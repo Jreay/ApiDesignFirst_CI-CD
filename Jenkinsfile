@@ -1,5 +1,3 @@
-def reportTimestamp
-
 pipeline {
   agent {
     docker {
@@ -66,17 +64,12 @@ pipeline {
 
     stage('Generar reporte PDF') {
       steps {
-        script {
-          reportTimestamp = new Date().format('yyyyMMdd_HHmm')
-          echo "Timestamp generado: ${reportTimestamp}"
-
-          withEnv(["REPORT_TIMESTAMP=${reportTimestamp}"]) {
-            sh '''
-              mkdir -p reportes
-              python3 ./generador_reporte/main.py
-            '''
-          }
-        }
+        sh '''
+          mkdir -p reportes
+          ls -l reportes
+          python3 ./generador_reporte/main.py
+          ls -l reportes
+        '''
       }
     }
 
@@ -84,44 +77,48 @@ pipeline {
       steps {
         withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
             sh '''
-                git config user.name "jenkins-bot"
-                git config user.email "jenkins@localhost"
-                git remote set-url origin https://${GIT_USER}:${GIT_PASS}@github.com/Jreay/ApiDesignFirst_CI-CD.git
-                
-                # Limpiar workspace
-                git reset --hard
-
-                # Cambiar y Sincronizar main
-                git checkout main
-                git pull --rebase origin main
-
-                # Actualizar solo la carpeta reportes en ApiDesignFirst_CI-CD
-                git add reportes
-                git commit -m "Reporte generado automáticamente: ${reportTimestamp}"
-
-                git push origin main
+              git config user.name "jenkins-bot"
+              git config user.email "jenkins@localhost"
+              git remote set-url origin https://${GIT_USER}:${GIT_PASS}@github.com/Jreay/ApiDesignFirst_CI-CD.git
+              
+              # Limpiar workspace
+              git reset --hard
+              # Cambiar y Sincronizar main
+              git checkout main
+              git pull --rebase origin main
+              # Actualizar solo la carpeta reportes en ApiDesignFirst_CI-CD
+              git add reportes
+              git commit -m "Reporte generado automáticamente"
+              git push origin main
             '''
         }
         dir('OpenAPI') {
-            withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
-                sh '''
-                    git config user.name "jenkins-bot"
-                    git config user.email "jenkins@localhost"
-                    git remote set-url origin https://${GIT_USER}:${GIT_PASS}@github.com/Jreay/OpenAPI.git
+          withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+            sh '''
+              git config user.name "jenkins-bot"
+              git config user.email "jenkins@localhost"
+              git remote set-url origin https://${GIT_USER}:${GIT_PASS}@github.com/Jreay/OpenAPI.git
 
-                    #Limpiar workspace
-                    git reset --hard
+              # Nos aseguramos estar en la rama "main" y sincronizados con el remoto
+              git checkout main
+              git pull origin main
 
-                    # Cambiar y Sincronizar main
-                    git checkout main
-                    git pull origin main
+              # Reemplazar TODO el contenido actual con el de dev-main
+              # Este es el comando clave para "planchar" el contenido sin cambiar de rama
+              git checkout origin/dev-main -- .
 
-                    # Insertar dev-main en main
-                    git reset --hard origin/dev-main
-                    echo "Rama main actualizada con dev-main"
-                    git push origin main --force 
-                '''
-            }
+              # Preparar y hacer el commit de esta nueva versión
+              git add .
+
+              # Usamos un mensaje de commit claro que explique la acción
+              # Condicional para evitar commit vacío, en caso de no existir cambios
+              if ! git diff-index --quiet HEAD --; then
+                  git commit -m "Rama Actualizada"
+              fi
+              # 4. Subir los cambios..
+              git push origin main
+            '''
+          }
         }
       }
     } 
