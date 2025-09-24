@@ -66,9 +66,7 @@ pipeline {
       steps {
         sh '''
           mkdir -p reportes
-          ls -l reportes
           python3 ./generador_reporte/main.py
-          ls -l reportes
         '''
       }
     }
