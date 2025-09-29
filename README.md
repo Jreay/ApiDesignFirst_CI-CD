@@ -26,5 +26,32 @@ Este proyecto es parte de mi titulación donde insertamos la validación de cont
 
 ## 📘 Cómo ejecutar
 
+### 1. Iniciar Docker
 ```bash
-docker-compose up -d
+docker-compose up -d --build
+```
+
+### 2. Configuración de SonarQube
+- Iniciar sesión con usuario: admin y contraseña: admin.
+
+- Cambiar la contraseña predeterminada.
+
+- Crear un token de usuario (se usará en Jenkins).
+
+### 3. Configuración de Jenkins
+
+- Iniciar sesión con:
+  - usuario: admin
+  - contraseña: admin
+- Instalar los siguientes plugins:
+  - Pipeline
+  - Pipeline: Job
+  - Pipeline: Step API
+  - Pipeline: Stage View
+  - Docker Pipeline
+  - Credentials Binding
+  - Git
+- Instalar los siguientes plugins:
+  - Credenciales de Git (usuario + token).
+  - Credenciales de SonarQube (token de usuario creado en SonarQube).
+- Crear un Pipeline apuntando a este repositorio.
