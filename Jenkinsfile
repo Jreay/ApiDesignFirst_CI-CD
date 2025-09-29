@@ -8,20 +8,20 @@ pipeline {
 
   stages {
 
-    stage('Validar contrato') {
+    stage('Validación de contrato') {
       steps {
         sh '''
           echo "Validar contrato original con espectral"
           mkdir -p ./resultados
           spectral lint ./contrato/openapi.yaml -r ./validar_contrato/reglas.yml --format json > ./resultados/resultadoEspectral.json
           
-          echo "Generar contrato basado en el codigo"
+          echo "Generar contrato basado en el API"
           rm -rf OpenAPI
           git clone --branch dev-main https://github.com/Jreay/OpenAPI.git OpenAPI
           npm i
           npm run generarContrato
 
-          echo "Compara contratos (Original vs Generado)"
+          echo "Comparar contratos (Original vs Generado)"
           npm run validarContrato
         '''
       }
@@ -36,10 +36,10 @@ pipeline {
             cd OpenAPI
             npm i
             
-            echo "Ejecutar pruebas jest"
+            echo "Ejecutar pruebas de cobertura con Jest"
             npm run test
 
-            echo "Escaneando api con Sonar"
+            echo "Ejecutar pruebas de calidad con Sonar"
             sonar-scanner \
               -Dsonar.host.url=http://sonarqube:9000 \
               -Dsonar.login=${SONAR_TOKEN}
@@ -53,25 +53,26 @@ pipeline {
       }
     }
 
-    stage('Pruebas rendimiento') {
+    stage('Validación de rendimiento') {
       steps {
         sh '''
-          echo "Ejecutar pruebas de K6"
+          echo "Ejecutar pruebas de rendimiento con K6"
           npm run pruebaK6
         '''
       }
     }
 
-    stage('Generar reporte PDF') {
+    stage('Generación de reporte') {
       steps {
         sh '''
+          echo "Generar reporte con Python"
           mkdir -p reportes
           python3 ./generador_reporte/main.py
         '''
       }
     }
 
-    stage('Generar y subir reporte') {
+    stage('Subir Reporte y Subir API') {
       steps {
         withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
             sh '''
